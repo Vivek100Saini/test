@@ -1,0 +1,531 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:mulexml="http://www.mulesoft.org/schema/mule/xml"
+	xmlns:json="http://www.mulesoft.org/schema/mule/json"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:context="http://www.springframework.org/schema/context" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:spring="http://www.springframework.org/schema/beans" version="EE-3.8.0"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="
+http://www.mulesoft.org/schema/mule/xml http://www.mulesoft.org/schema/mule/xml/current/mule-xml.xsd 
+http://www.mulesoft.org/schema/mule/json http://www.mulesoft.org/schema/mule/json/current/mule-json.xsd http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd 
+	                    http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-current.xsd 
+	                    http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-current.xsd
+                        http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd"
+                        
+          >
+ 
+ <http:request-config name="jigsawCompRequest" host="172.16.4.6" port="9999"  doc:name="jigsawrequestconfigdoc"/>
+ <http:request-config name="oldTxnCompRequest" host="172.16.4.6" port="8081"  doc:name="oldtxnrequestconfigdoc"/>
+ <http:request-config name="extensibilityCompRequest" host="172.16.4.6" port="7173"  doc:name="extensibilityrequestconfigdoc"/>
+ 
+ 
+ <http:listener-config host="172.16.4.5" name="IBOUND_LISTENER" port="9696" />
+ 
+  <flow name="InboundMobileAppFlow" >
+     <http:listener config-ref="IBOUND_LISTENER" path="/nida" />
+     <echo-component />
+     <choice>
+        <when expression="#[payload == null ]" >     
+     <set-payload name="reqData" value="[Response ok from EIG]">
+     </set-payload>     
+            <logger message="reqquestText Payloadd recieved at EIG:#[payload]" level="INFO" doc:name="Logger" category="EIGInformation" />  
+        </when>
+        <otherwise>
+           <logger message="Payloadd recieved at EIG:#[payload]" level="INFO" doc:name="Logger" category="EIGInformation" />
+              <set-payload name="reqData1" value="[Response ok from EIG]">
+     </set-payload>  
+        </otherwise>
+      </choice>         
+     
+       
+  </flow> 
+
+  
+  
+  <sub-flow name="XMLRequestResponseProcessorFlow">
+		<echo-component doc:name="Echo" />		
+		
+		<custom-transformer
+			class="com.comviva.mfs.eig.transformers.generic.ExtractIdentifiers"
+			doc:name="SetRequestIdentifiers">
+			<spring:property name="sessionBean" ref="SessionBean" />
+			<spring:property name="serviceIdentifierTag" value="TYPE" />
+			<spring:property name="interfaceIdentifierTag" value="interfaceId" />
+		</custom-transformer>
+		<custom-transformer class="com.comviva.mfs.eig.transformers.mapper.XmlMapper" doc:name="Initializer">
+			<spring:property name="sessionBean" ref="SessionBean" />
+		</custom-transformer>
+        <flow-ref name="NESTED_SOAP_OR_XML_TYPE_REQUEST_PROCESSOR" doc:name="Flow Reference" />
+        <flow-ref name="HitMobiquityFlow" doc:name="Mobiquity Flow" />				
+        <echo-component doc:name="Echo" />
+        <logger message="Standard Response from TXN:#[payload]" level="INFO" doc:name="Logger" category="EIGInformation" />
+           <choice> 
+
+               <when expression="#[flowVars.noResponseTemplate == 'Y']" > 
+
+		<logger message="No response process required"	level="INFO" doc:name="Logger" category="EIGInformation" />		
+              </when>
+              <otherwise>
+                    <flow-ref name="NESTED_SOAP_OR_XML_TYPE_RESPONSE_PROCESSOR" doc:name="Flow Reference" />
+                <logger message="Standard Response from TXN:#[payload]" level="INFO" doc:name="Logger" category="EIGInformation" />
+              </otherwise>     
+
+           </choice>   
+  </sub-flow>
+  
+  <sub-flow name="XMLRequestProcessorFlow">
+		<echo-component doc:name="Echo" />
+		<custom-transformer
+			class="com.comviva.mfs.eig.transformers.generic.ExtractIdentifiers"
+			doc:name="SetRequestIdentifiers">
+			<spring:property name="sessionBean" ref="SessionBean" />
+			<spring:property name="serviceIdentifierTag" value="TYPE" />
+			<spring:property name="interfaceIdentifierTag" value="interfaceId" />
+		</custom-transformer>
+		<custom-transformer class="com.comviva.mfs.eig.transformers.mapper.XmlMapper" doc:name="Initializer">
+			<spring:property name="sessionBean" ref="SessionBean" />
+		</custom-transformer>
+        <flow-ref name="NESTED_SOAP_OR_XML_TYPE_REQUEST_PROCESSOR" doc:name="Flow Reference" />
+        <flow-ref name="HitMobiquityFlow" doc:name="Mobiquity Flow" />				
+        <echo-component doc:name="Echo" />
+        <logger message="Standard Response from TXN:#[payload]" level="INFO" doc:name="Logger" category="EIGInformation" />    		
+
+  </sub-flow>
+  
+  <sub-flow name="XMLRequestJSONResponseProcessorFlow">
+		<echo-component doc:name="Echo" />
+		
+            <choice>
+                   <when expression="#[flowVars['serviceTypeVarCheck'] == 'Y']" >
+                    <custom-transformer
+                        class="com.comviva.mfs.eig.transformers.generic.ExtractIdentifiers"
+                        doc:name="SetRequestIdentifiers">
+                        <spring:property name="sessionBean" ref="SessionBean" />
+                        <spring:property name="serviceIdentifierTag" value="serviceType" />
+                        <spring:property name="interfaceIdentifierTag" value="interfaceId" />
+                </custom-transformer> 
+
+                   </when>
+                   <otherwise>     
+            <custom-transformer
+			class="com.comviva.mfs.eig.transformers.generic.ExtractIdentifiers"
+			doc:name="SetRequestIdentifiers">
+			<spring:property name="sessionBean" ref="SessionBean" />
+			<spring:property name="serviceIdentifierTag" value="TYPE" />
+			<spring:property name="interfaceIdentifierTag" value="interfaceId" />
+		</custom-transformer>
+              </otherwise>
+             </choice>
+		<custom-transformer class="com.comviva.mfs.eig.transformers.mapper.XmlMapper" doc:name="Initializer">
+			<spring:property name="sessionBean" ref="SessionBean" />
+		</custom-transformer>
+        <flow-ref name="NESTED_SOAP_OR_XML_TYPE_REQUEST_PROCESSOR" doc:name="Flow Reference" />
+		<!--<flow-ref name="CountryCodeRemoverFlow" doc:name="Country Code removal Flow Reference" />-->
+        <flow-ref name="HitMobiquityFlow" doc:name="Mobiquity Flow" />				
+        <echo-component doc:name="Echo" />
+        <logger message="Standard Response from TXN:#[payload]" level="INFO" doc:name="Logger" category="EIGInformation" />
+	    <flow-ref name="GENERIC_JSON_TYPE_RESPONSE_PROCESSOR"	doc:name="Flow Reference" />
+		<logger message="Standard Response from TXN:#[payload]"	level="INFO" doc:name="Logger" category="EIGInformation" />		
+
+  </sub-flow>
+  
+  
+  <sub-flow name="GENERIC_SOAP_OR_XML_TYPE_REQUEST_PRE_PROCESSOR">
+
+                   <echo-component doc:name="Echo" />
+                 <choice doc:name="Choice">
+                        <when expression="#[flowVars['sensitiveParamVar'] == 'Y']">
+
+                          <logger message="response" level="INFO" doc:name="Logger" category="EIGInformation" />
+                        </when>
+                     <otherwise>
+                             <logger message="REQUEST recieved :#[payload]" level="INFO" doc:name="Logger" category="EIGInformation" />
+
+                     </otherwise>
+
+                </choice>
+
+		<custom-transformer
+			class="com.comviva.mfs.eig.transformers.generic.InputXmlToMap"
+			doc:name="InputXmlToMap">
+			<spring:property name="sessionBean" ref="SessionBean" />
+		</custom-transformer>
+		<custom-transformer
+			class="com.comviva.mfs.eig.transformers.generic.MapToTransformedMap"
+			doc:name="MapToTransformedMap">
+			<spring:property name="sessionBean" ref="SessionBean" />
+		</custom-transformer>
+              <choice doc:name="Choice">
+                        <when expression="#[flowVars['mirrorResponseFlow'] == 'Y']">
+                                <foreach collection="#[sessionVars.responseMirrorMap.entrySet()]" doc:name="For Each">
+                                        <expression-filter expression="#[rootMessage.payload.put(message.payload.key,message.payload.value);]" doc:name="Expression"/>
+                                </foreach>
+                    <logger message="Payload after mirror response :#[payload]" level="INFO" doc:name="Logger" category="EIGInformation" />    
+                    </when>
+
+                     <otherwise>
+                                <logger message="request" level="INFO" doc:name="Logger" category="EIGInformation" />
+                     </otherwise>
+
+                </choice>
+
+		<custom-transformer
+			class="com.comviva.mfs.eig.transformers.generic.MapToTemplate"
+			doc:name="MapToTemplate">
+			<spring:property name="sessionBean" ref="SessionBean" />
+		</custom-transformer>
+                 <choice doc:name="Choice">
+                        <when expression="#[flowVars['sensitiveParamVar'] == 'Y']">
+
+                          <logger message="response" level="INFO" doc:name="Logger" category="EIGInformation" />
+                        </when>
+                     <otherwise>
+                             <logger message="REQUEST recieved :#[payload]" level="INFO" doc:name="Logger" category="EIGInformation" />
+
+                     </otherwise>
+
+                </choice>
+
+	</sub-flow>
+
+	<sub-flow name="GENERIC_SOAP_OR_XML_TYPE_RESPONSE_PROCESSOR">
+		<echo-component doc:name="Echo" />
+                 <choice doc:name="Choice">
+                        <when expression="#[flowVars['sensitiveParamVar'] == 'Y']">
+
+                          <logger message="response" level="INFO" doc:name="Logger" category="EIGInformation" />
+                        </when>
+                     <otherwise>
+                             <logger message="REQUEST recieved :#[payload]" level="INFO" doc:name="Logger" category="EIGInformation" />
+
+                     </otherwise>
+
+                </choice> 
+
+		<custom-transformer
+			class="com.comviva.mfs.eig.transformers.generic.InputXmlToMap"
+			doc:name="InputXmlToMap">
+			<spring:property name="sessionBean" ref="SessionBean" />
+			<!-- <spring:property name="serviceIdentifierTag" value="serviceType" 
+				/> <spring:property name="interfaceIdentificationTag" value="interfaceId" 
+				/> -->
+		</custom-transformer>
+		<custom-transformer
+			class="com.comviva.mfs.eig.transformers.generic.SetSessionObjects"
+			doc:name="SetSessionObjects">
+			<spring:property name="sessionBean" ref="SessionBean" />
+			<spring:property name="type" value="response" />
+		</custom-transformer>
+		<custom-transformer
+			class="com.comviva.mfs.eig.transformers.generic.MapToTransformedMap"
+			doc:name="MapToTransformedMap">
+			<spring:property name="sessionBean" ref="SessionBean" />
+		</custom-transformer>
+		<custom-transformer
+			class="com.comviva.mfs.eig.transformers.generic.MapToTemplate"
+			doc:name="MapToTemplate">
+			<spring:property name="sessionBean" ref="SessionBean" />
+			<!-- <spring:property name="fixedTemplatePath" value="templates/SelcomResponse.xml" 
+				/> -->
+		</custom-transformer>
+                 <choice doc:name="Choice">
+                        <when expression="#[flowVars['sensitiveParamVar'] == 'Y']">
+
+                          <logger message="response" level="INFO" doc:name="Logger" category="EIGInformation" />
+                        </when>
+                     <otherwise>
+                             <logger message="REQUEST recieved :#[payload]" level="INFO" doc:name="Logger" category="EIGInformation" />
+
+                     </otherwise>
+
+                </choice>
+
+	</sub-flow>
+	<sub-flow name="GENERIC_JSON_TYPE_RESPONSE_PROCESSOR">
+		<echo-component doc:name="Echo" />
+		<logger level="INFO" doc:name="Logger" message="#[payload]" />
+		<json:json-to-object-transformer
+			returnClass="java.util.Map" doc:name="JSON to Object" />
+		
+		
+		<custom-transformer
+			class="com.comviva.mfs.eig.transformers.generic.MapToJSONObject"
+			doc:name="MapToJSONObject">
+			<spring:property name="sessionBean" ref="SessionBean" />
+		</custom-transformer>		
+		<echo-component doc:name="Echo" />
+        <logger message="PEGASUS CMPREQ Response to TXN:#[payload]" level="INFO" doc:name="Logger" category="EIGInformation" /> 
+		
+		<custom-transformer
+			class="com.comviva.mfs.eig.transformers.generic.SetSessionObjects"
+			doc:name="SetSessionObjects">
+			<spring:property name="sessionBean" ref="SessionBean" />
+			<spring:property name="type" value="response" />
+		</custom-transformer>
+		<set-payload value="#[message.payloadAs(java.lang.String)]"
+			doc:name="Set Payload" />
+		<custom-transformer
+			class="com.comviva.mfs.eig.transformers.generic.JsonPathToMap"
+			doc:name="JsonPathToMap">
+			<spring:property name="sessionBean" ref="SessionBean" />
+		</custom-transformer>
+
+		<choice doc:name="Choice">
+			<when expression="#[flowVars['mirrorResponseFlow'] == 'Y']">
+				<foreach collection="#[sessionVars.responseMirrorMap.entrySet()]" doc:name="For Each">
+					<expression-filter expression="#[rootMessage.payload.put(message.payload.key,message.payload.value);]" doc:name="Expression"/>
+				</foreach>
+
+                    <logger message="Payload after mirror response :#[payload]" level="INFO" doc:name="Logger" category="EIGInformation" />
+			</when>
+
+	             <otherwise>
+				<logger message="response" level="INFO" doc:name="Logger" category="EIGInformation" />
+                     </otherwise>
+
+		</choice>
+
+		<custom-transformer
+			class="com.comviva.mfs.eig.transformers.generic.MapToTemplate"
+			doc:name="MapToTemplate">
+			<spring:property name="sessionBean" ref="SessionBean" />
+			<!-- <spring:property name="fixedTemplatePath" value="templates/SelcomResponse.xml" 
+				/> -->
+		</custom-transformer>
+                <logger message="PEGASUS CMPREQ Response to TXN:#[payload]" level="INFO" doc:name="Logger" category="EIGInformation" />
+
+	</sub-flow>	
+
+	<sub-flow name="NESTED_SOAP_OR_XML_TYPE_RESPONSE_PROCESSOR">
+		<echo-component doc:name="Echo" />
+                <logger message="PEGASUS CMPREQ Response to TXN:#[payload]" level="INFO" doc:name="Logger" category="EIGInformation" /> 
+		<custom-transformer
+			class="com.comviva.mfs.eig.transformers.generic.XmlTagFilter"
+			doc:name="XmlTagFilter">
+		</custom-transformer>
+		<custom-transformer
+			class="com.comviva.mfs.eig.transformers.generic.XmlToJson" doc:name="XmlToJson">
+			<spring:property name="sessionBean" ref="SessionBean" />
+		</custom-transformer>
+		<json:object-to-json-transformer
+			doc:name="Object to JSON" />
+		<custom-transformer
+			class="com.comviva.mfs.eig.transformers.generic.JSONObjectToMap"
+			doc:name="JSONObjectToMap">
+			<spring:property name="sessionBean" ref="SessionBean" />
+		</custom-transformer>
+		<custom-transformer
+			class="com.comviva.mfs.eig.transformers.generic.SetSessionObjects"
+			doc:name="SetSessionObjects">
+			<spring:property name="sessionBean" ref="SessionBean" />
+			<spring:property name="type" value="response" />
+		</custom-transformer>
+		<custom-transformer
+			class="com.comviva.mfs.eig.transformers.generic.MapToJSONObject"
+			doc:name="MapToJSONObject">
+			<spring:property name="sessionBean" ref="SessionBean" />
+		</custom-transformer>
+		<set-payload value="#[message.payloadAs(java.lang.String)]"
+			doc:name="Set Payload" />
+		<custom-transformer
+			class="com.comviva.mfs.eig.transformers.generic.JsonPathToMap"
+			doc:name="JsonPathToMap">
+			<spring:property name="sessionBean" ref="SessionBean" />
+		</custom-transformer>
+
+		<choice doc:name="Choice">
+			<when expression="#[flowVars['mirrorResponseFlow'] == 'Y']">
+				<foreach collection="#[sessionVars.responseMirrorMap.entrySet()]" doc:name="For Each">
+					<expression-filter expression="#[rootMessage.payload.put(message.payload.key,message.payload.value);]" doc:name="Expression"/>
+				</foreach>
+                       <logger message="Payload after mirror response:#[payload]" level="INFO" doc:name="Logger" category="EIGInformation" />
+
+    
+			</when>
+
+	             <otherwise>
+				<logger message="response" level="INFO" doc:name="Logger" category="EIGInformation" />
+                     </otherwise>
+
+		</choice>
+
+		<custom-transformer
+			class="com.comviva.mfs.eig.transformers.generic.MapToTemplate"
+			doc:name="MapToTemplate">
+			<spring:property name="sessionBean" ref="SessionBean" />
+			<!-- <spring:property name="fixedTemplatePath" value="templates/SelcomResponse.xml" 
+				/> -->
+		</custom-transformer>
+                <logger message="PEGASUS CMPREQ Response to TXN:#[payload]" level="INFO" doc:name="Logger" category="EIGInformation" />
+
+	</sub-flow>
+
+	<sub-flow name="NESTED_SOAP_OR_XML_TYPE_REQUEST_PROCESSOR">
+		<echo-component doc:name="Echo" />
+              
+                <choice doc:name="Choice">
+                        <when expression="#[flowVars['sensitiveParamVar'] == 'Y']">
+                     
+                          <logger message="response" level="INFO" doc:name="Logger" category="EIGInformation" />
+                        </when>
+                     <otherwise>
+                             <logger message="REQUEST recieved :#[payload]" level="INFO" doc:name="Logger" category="EIGInformation" />
+
+                     </otherwise>
+
+                </choice>
+<!-- 		<custom-transformer -->
+<!-- 			class="com.comviva.mfs.eig.transformers.util.ATAuthenticator" -->
+<!-- 			doc:name="ATAuthenticator"> -->
+<!-- 		</custom-transformer> -->
+		
+		<custom-transformer
+			class="com.comviva.mfs.eig.transformers.generic.XmlTagFilter"
+			doc:name="XmlTagFilter">
+		</custom-transformer>
+		<custom-transformer
+			class="com.comviva.mfs.eig.transformers.generic.XmlToJson" doc:name="XmlToJson">
+			<spring:property name="sessionBean" ref="SessionBean" />
+		</custom-transformer>
+		<json:object-to-json-transformer
+			doc:name="Object to JSON" />
+
+		<set-payload value="#[message.payloadAs(java.lang.String)]"
+			doc:name="Set Payload" />
+		<custom-transformer
+			class="com.comviva.mfs.eig.transformers.generic.JsonPathToMap"
+			doc:name="JsonPathToMap">
+			<spring:property name="sessionBean" ref="SessionBean" />
+		</custom-transformer>
+		<custom-transformer
+			class="com.comviva.mfs.eig.transformers.generic.MapToTemplate"
+			doc:name="MapToTemplate">
+			<spring:property name="sessionBean" ref="SessionBean" />
+			<!-- <spring:property name="fixedTemplatePath" value="templates/SelcomResponse.xml" 
+				/> -->
+		</custom-transformer>
+
+                 <choice doc:name="Choice">
+                        <when expression="#[flowVars['sensitiveParamVar'] == 'Y']">
+
+                          <logger message="response" level="INFO" doc:name="Logger" category="EIGInformation" />
+                        </when>
+                     <otherwise>
+                             <logger message="REQUEST recieved :#[payload]" level="INFO" doc:name="Logger" category="EIGInformation" />
+
+                     </otherwise>
+
+                </choice>
+
+	</sub-flow>
+
+
+
+
+	<sub-flow name="Auth-fail-handler-flow">
+		<set-payload
+			value="&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;&#xD;&#xA;&lt;COMMAND&gt;&#xD;&#xA;&lt;TXNSTATUS&gt;01&lt;/TXNSTATUS&gt;&#xD;&#xA;&lt;MESSAGE&gt;Credential are Invalid!!&lt;/MESSAGE&gt;&#xD;&#xA;&lt;EXTRA&gt;$EXTRA&lt;/EXTRA&gt;&#xD;&#xA;&lt;TXNID&gt;$TXNID&lt;/TXNID&gt;   &#xD;&#xA;&lt;/COMMAND&gt;"
+			doc:name="Set Payload" mimeType="text/xml" />
+	</sub-flow>
+
+	
+	<sub-flow name="CountryCodeRemoverFlow">
+		<object-to-string-transformer doc:name="Object to String" />
+		<mulexml:xml-to-dom-transformer
+			returnClass="org.dom4j.Document" doc:name="XML to DOM" />
+		<expression-component doc:name="Expression">
+		<![CDATA[  
+		if(null!=message.payload.getRootElement().selectSingleNode('//COMMAND/MSISDN')){
+        	node = message.payload.getRootElement().selectSingleNode('//COMMAND/MSISDN');
+		String msisdn = node.text;
+		node.text = msisdn.replaceFirst('^250','');
+        }
+	if(null!=message.payload.getRootElement().selectSingleNode('//COMMAND/msisdn')){
+        	node = message.payload.getRootElement().selectSingleNode('//COMMAND/msisdn');
+		String msisdn = node.text;
+		node.text = msisdn.replaceFirst('^250','');
+        }
+
+	if(null!=message.payload.getRootElement().selectSingleNode('//COMMAND/AuthorizedMobileNumber')){
+        	node = message.payload.getRootElement().selectSingleNode('//COMMAND/AuthorizedMobileNumber');
+		String msisdn = node.text;
+		node.text = msisdn.replaceFirst('^250','');
+        }
+        	if(null!=message.payload.getRootElement().selectSingleNode('//COMMAND/MSISDN2')){
+         	node = message.payload.getRootElement().selectSingleNode('//COMMAND/MSISDN2');
+		String msisdn = node.text;
+		node.text = msisdn.replaceFirst('^250','');
+        }
+
+        	if(null!=message.payload.getRootElement().selectSingleNode('//COMMAND/msisdn2')){
+         	node = message.payload.getRootElement().selectSingleNode('//COMMAND/msisdn2');
+		String msisdn = node.text;
+		node.text = msisdn.replaceFirst('^250','');
+        }
+        	if(null!=message.payload.getRootElement().selectSingleNode('//COMMAND/MSISDN3')){
+         	node = message.payload.getRootElement().selectSingleNode('//COMMAND/MSISDN3');
+		String msisdn = node.text;
+		node.text = msisdn.replaceFirst('^250','');
+        }]]>
+		</expression-component>
+		<mulexml:dom-to-xml-transformer
+			doc:name="DOM to XML" />
+		<logger message="#[message.payload]" level="INFO" doc:name="Logger" />
+	</sub-flow>
+	<sub-flow name="BalanceFromater">
+		<object-to-string-transformer doc:name="Object to String" />
+		<mulexml:xml-to-dom-transformer
+			returnClass="org.dom4j.Document" doc:name="XML to DOM" />
+		<expression-component doc:name="Expression">
+		<![CDATA[  
+		if(null!=message.payload.getRootElement().selectSingleNode('//COMMAND/BALANCE')){
+        	node = message.payload.getRootElement().selectSingleNode('//COMMAND/BALANCE');
+		String balance = node.text;
+		node.text = balance.replaceAll(',','');
+        }]]>
+		</expression-component>
+		<mulexml:dom-to-xml-transformer
+			doc:name="DOM to XML" />
+		<logger message="#[message.payload]" level="INFO" doc:name="Logger" />
+	</sub-flow>
+
+
+<sub-flow name="HitMobiquityFlow" >  
+  
+             <choice>
+                  <when expression="#[flowVars['jigsawComp'] =='Y']">
+                    <http:request config-ref="jigsawCompRequest" path="/jigsaw/sync/serviceRequest/{serviceCode}" method="POST" responseTimeout="10000" doc:name="HTTP" >
+						<http:request-builder>
+						<http:header headerName="Content-Type" value="application/json" />
+						<http:uri-param paramName="serviceCode" value="#[flowVars['serviceCode']]" />
+						</http:request-builder>
+                    </http:request>
+                  </when>
+                  <when expression="#[flowVars['oldTxnComp'] == 'Y']" >                   
+                     <set-variable value="#[{'LOGIN':'Ussd_Bearer1','PASSWORD':'MPtc1ToayCkCMZZeHUu0snA3aUaPbSFQ9UzIkNGbVRU=','REQUEST_GATEWAY_CODE':'USSD','REQUEST_GATEWAY_TYPE':'USSD'}]" variableName="oldTxnQueryParams"></set-variable>                  
+                     <http:request config-ref="oldTxnCompRequest" path="/TxnWebapp/{selectorType}" method="POST" responseTimeout="10000" doc:name="HTTP" >
+						<http:request-builder>
+						<http:header headerName="Content-Type" value="text/xml" />						
+						<http:uri-param value="#[flowVars['selectorType']]" paramName="selectorType" />
+						<http:query-params expression="#[flowVars.oldTxnQueryParams]" />
+						</http:request-builder>
+                    </http:request>                  
+                  </when>
+                  <when expression="#[flowVars['extensibilityComp'] == 'Y']">
+                       <http:request config-ref="extensibilityCompRequest" path="/extensibility/utility/{serviceCode}" method="POST" responseTimeout="10000" doc:name="HTTP" >
+                                 <http:request-builder>
+                                                <http:header headerName="Content-Type" value="application/json" />
+                                                <http:uri-param paramName="serviceCode" value="#[flowVars['serviceCode']]" />
+                                 </http:request-builder>
+                        </http:request>
+
+                  </when>
+                  <otherwise>
+                       <logger message="Warning: No Mobiquity Component Found" level="INFO" doc:name="Logger" category="EIGInformation" />
+                  </otherwise>              
+             </choice>
+  
+  </sub-flow>
+
+</mule>
+
