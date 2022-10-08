@@ -1,0 +1,512 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mule
+        xmlns:scripting="http://www.mulesoft.org/schema/mule/scripting"
+        xmlns:jms="http://www.mulesoft.org/schema/mule/jms"
+        xmlns:http="http://www.mulesoft.org/schema/mule/http"
+        xmlns="http://www.mulesoft.org/schema/mule/core"
+        xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+        xmlns:spring="http://www.springframework.org/schema/beans"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.mulesoft.org/schema/mule/scripting http://www.mulesoft.org/schema/mule/scripting/current/mule-scripting.xsd
+http://www.mulesoft.org/schema/mule/jms http://www.mulesoft.org/schema/mule/jms/current/mule-jms.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-current.xsd
+http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd">
+        <queued-asynchronous-processing-strategy name="Allow42Threads" maxThreads="42" doc:name="Queued Asynchronous Processing Strategy" />
+        <sub-flow name="asyncwithcallbackSub_Flow">
+                <logger message="Inside Async with call back stub flow #[sessionVars['serviceName']]" level="INFO" doc:name="Logger" category="EIGInformation"/>
+ <logger message="isSyncrequest **************  #[sessionVars['isSyncRequest']]" level="INFO" doc:name="Logger" category="EIGInformation"/>
+                <choice doc:name="Product Service Based splitter">
+                        <when expression="#[sessionVars['isSyncRequest'] == 'true']">
+                                <choice doc:name="Product Service Based splitter">
+                                        <when expression="#[sessionVars['serviceName'].replace('.RESPONSE','') == 'CTMMOREQ']">
+<expression-component>
+    Thread.sleep(5000);
+</expression-component>
+
+                                                <logger message="inside sync choice" level="INFO" doc:name="Logger" category="EIGInformation"/>
+                                                <http:outbound-endpoint exchange-pattern="one-way" method="POST" address="http://192.168.130.2:9393/sfm/serviceRequest/resume/CTMMOREQSYNC" contentType="application/json" doc:name="HTTP"/>
+                                        </when>
+                                        <when expression="#[sessionVars['serviceName'].replace('.RESPONSE','') == 'BILLPAY']">
+<expression-component>
+    Thread.sleep(5000);
+</expression-component>
+
+                                                <logger message="inside sync choice" level="INFO" doc:name="Logger" category="EIGInformation"/>
+                                                <http:outbound-endpoint exchange-pattern="one-way" method="POST" address="http://192.168.130.2:9393/sfm/serviceRequest/resume/BILLPAYSYNC" contentType="application/json" doc:name="HTTP"/>
+                                        </when>
+                                        <when expression="#[sessionVars['serviceName'].replace('.RESPONSE','') == 'STOCKOUT']">
+<expression-component>
+    Thread.sleep(5000);
+</expression-component>
+
+                                                <logger message="inside sync choice" level="INFO" doc:name="Logger" category="EIGInformation"/>
+                                                <http:outbound-endpoint exchange-pattern="one-way" method="POST" address="http://192.168.130.2:9393/sfm/serviceRequest/resume/STOCKWITHDRAWLSYNC" contentType="application/json" doc:name="HTTP"/>
+                                        </when>
+                                        <when expression="#[sessionVars['serviceName'].replace('.RESPONSE','') == 'MERCHPAY']">
+<expression-component>
+    Thread.sleep(5000);
+</expression-component>
+
+                                                <logger message="inside sync choice" level="INFO" doc:name="Logger" category="EIGInformation"/>
+                                                <http:outbound-endpoint exchange-pattern="one-way" method="POST" address="http://192.168.130.2:9393/sfm/serviceRequest/resume/MERCHPAYSYNC" contentType="application/json" doc:name="HTTP"/>
+                                        </when>
+                                        <when expression="#[sessionVars['serviceName'].replace('.RESPONSE','') == 'RC']">
+<expression-component>
+    Thread.sleep(5000);
+</expression-component>
+
+                                                <logger message="inside sync choice" level="INFO" doc:name="Logger" category="EIGInformation"/>
+                                                <http:outbound-endpoint exchange-pattern="one-way" method="POST" address="http://192.168.130.2:9393/sfm/serviceRequest/resume/RCSYNC" contentType="application/json" doc:name="HTTP"/>
+                                        </when>
+		                        <when expression="#[sessionVars['serviceName'].replace('.RESPONSE','') == 'CWBREQ']">
+<expression-component>
+    Thread.sleep(5000);
+</expression-component>
+                                                <logger message="inside sync choice" level="INFO" doc:name="Logger" category="EIGInformation"/>
+                                                <http:outbound-endpoint exchange-pattern="one-way" method="POST" address="http://192.168.130.2:9393/sfm/serviceRequest/resume/CWBREQSYNC" contentType="application/json" doc:name="HTTP"/>
+                                        </when>
+					<when expression="#[sessionVars['serviceName'].replace('.RESPONSE','') == 'INTLPICKUP']">
+<expression-component>
+    Thread.sleep(5000);
+</expression-component>
+
+                                                <logger message="inside sync choice" level="INFO" doc:name="Logger" category="EIGInformation"/>
+                                                <http:outbound-endpoint exchange-pattern="one-way" method="POST" address="http://192.168.130.2:9393/sfm/serviceRequest/resume/INTLPICKUP" contentType="application/xml" doc:name="HTTP"/>
+					</when>
+
+                                        <when expression="#[sessionVars['serviceName'].replace('.RESPONSE','') == 'CBWREQ']">
+<expression-component>
+    Thread.sleep(5000);
+</expression-component>
+
+                                                <logger message="inside sync choice" level="INFO" doc:name="Logger" category="EIGInformation"/>
+                                                <http:outbound-endpoint exchange-pattern="one-way" method="POST" address="http://192.168.130.2:9393/sfm/serviceRequest/resume/CBWREQSYNC" contentType="application/json" doc:name="HTTP"/>
+                                        </when>
+                                        <when expression="#[sessionVars['serviceName'].replace('.RESPONSE','') == 'STKLIQREQ']">
+<expression-component>
+    Thread.sleep(5000);
+</expression-component>
+
+                                                <logger message="inside sync choice" level="INFO" doc:name="Logger" category="EIGInformation"/>
+                                                <http:outbound-endpoint exchange-pattern="one-way" method="POST" address="http://192.168.130.2:9393/sfm/serviceRequest/resume/STKLIQREQSYNC" contentType="application/json" doc:name="HTTP"/>
+                                        </when>
+                                        <when expression="#[sessionVars['serviceName'].replace('.RESPONSE','') == 'SRBILPAY']">
+<expression-component>
+    Thread.sleep(5000);
+</expression-component>
+
+                                                <logger message="inside sync choice" level="INFO" doc:name="Logger" category="EIGInformation"/>
+                                                <http:outbound-endpoint exchange-pattern="one-way" method="POST" address="http://192.168.130.2:9393/sfm/serviceRequest/resume/SRBILPAYSYNC" contentType="application/json" doc:name="HTTP"/>
+                                        </when>
+                                        <when expression="#[sessionVars['serviceName'].replace('.RESPONSE','') == 'RBILPAYONE']">
+<expression-component>
+    Thread.sleep(5000);
+</expression-component>
+
+                                                <logger message="inside sync choice" level="INFO" doc:name="Logger" category="EIGInformation"/>
+                                                <http:outbound-endpoint exchange-pattern="one-way" method="POST" address="http://192.168.130.2:9393/sfm/serviceRequest/resume/RBILPAYONESYNC" contentType="application/json" doc:name="HTTP"/>
+                                        </when>
+<when expression="#[sessionVars['serviceName'].replace('.RESPONSE','') == 'SBILLPAY']">
+<expression-component>
+    Thread.sleep(5000);
+</expression-component>
+
+                                                <logger message="inside sync choice" level="INFO" doc:name="Logger" category="EIGInformation"/>
+                                                <http:outbound-endpoint exchange-pattern="one-way" method="POST" address="http://192.168.130.2:9393/sfm/serviceRequest/resume/SBILLPAYSYNC" contentType="application/json" doc:name="HTTP"/>
+                                        </when>
+					<when expression="#[sessionVars['serviceName'].replace('.RESPONSE','') == 'TXNCORRECT']">
+<expression-component>
+    Thread.sleep(5000);
+</expression-component>
+
+                                                <logger message="inside sync choice" level="INFO" doc:name="Logger" category="EIGInformation"/>
+                                                <http:outbound-endpoint exchange-pattern="one-way" method="POST" address="http://192.168.130.2:9393/sfm/serviceRequest/resume/TXNCORRECTSYNC" contentType="application/json" doc:name="HTTP"/>
+					</when>
+
+<when expression="#[sessionVars['serviceName'].replace('.RESPONSE','') == 'MERCREFUND']">
+<expression-component>
+    Thread.sleep(5000);
+</expression-component>
+
+                                                <logger message="inside sync choice" level="INFO" doc:name="Logger" category="EIGInformation"/>
+                                                <http:outbound-endpoint exchange-pattern="one-way" method="POST" address="http://192.168.130.2:9393/sfm/serviceRequest/resume/MERCREFUNDSYNC" contentType="application/json" doc:name="HTTP"/>
+                                        </when>                                      
+					<when expression="#[sessionVars['serviceName'].replace('.RESPONSE','') == 'ENQUIRY']">
+<expression-component>
+    Thread.sleep(5000);
+</expression-component>
+
+						<logger message="inside sync choice" level="INFO" doc:name="Logger" category="EIGInformation"/>
+						<http:outbound-endpoint exchange-pattern="one-way" method="POST" address="http://192.168.130.2:9393/sfm/serviceRequest/resume/ENQUIRY" contentType="application/json" doc:name="HTTP"/>
+                                        </when>
+					<when expression="#[sessionVars['serviceName'].replace('.RESPONSE','') == 'IOABTREQ']">
+<expression-component>
+    Thread.sleep(5000);
+</expression-component>
+						<logger message="inside sync choice" level="INFO" doc:name="Logger" category="EIGInformation"/>
+    					<http:outbound-endpoint exchange-pattern="one-way" method="POST" address="http://192.168.130.2:9393/sfm/serviceRequest/resume/IOABTREQ" contentType="application/json" doc:name="HTTP"/>
+    							</when>
+					<when expression="#[sessionVars['serviceName'].replace('.RESPONSE','') == 'IABTREQ']">
+<expression-component>
+    Thread.sleep(5000);
+</expression-component>
+						<logger message="inside sync choice" level="INFO" doc:name="Logger" category="EIGInformation"/>
+						<http:outbound-endpoint exchange-pattern="one-way" method="POST" address="http://192.168.130.2:9393/sfm/serviceRequest/resume/IABTREQ" contentType="application/json" doc:name="HTTP"/>
+							</when>
+					<when expression="#[sessionVars['serviceName'].replace('.RESPONSE','') == 'OBANKASS']">
+<expression-component>
+    Thread.sleep(5000);
+</expression-component>
+						<logger message="inside sync choice" level="INFO" doc:name="Logger" category="EIGInformation"/>
+    							<http:outbound-endpoint exchange-pattern="one-way" method="POST" address="http://192.168.130.2:9393/sfm/serviceRequest/resume/OBANKASS" contentType="application/json" doc:name="HTTP"/>
+    </when>
+<when expression="#[sessionVars['serviceName'].replace('.RESPONSE','') == 'SVCBNKBAL']">
+<expression-component>
+    Thread.sleep(5000);
+</expression-component>
+                                                <logger message="inside sync choice" level="INFO" doc:name="Logger" category="EIGInformation"/>
+                                                        <http:outbound-endpoint exchange-pattern="one-way" method="POST" address="http://192.168.130.2:9393/sfm/serviceRequest/resume/SVCBNKBAL" contentType="application/xml" doc:name="HTTP"/>
+    </when>
+
+<when expression="#[sessionVars['serviceName'].replace('.RESPONSE','') == 'SVCB2WCNF']">
+<expression-component>
+    Thread.sleep(5000);
+</expression-component>
+                                                <logger message="inside sync choice" level="INFO" doc:name="Logger" category="EIGInformation"/>
+                                                        <http:outbound-endpoint exchange-pattern="one-way" method="POST" address="http://192.168.130.2:9393/sfm/serviceRequest/resume/SVCB2WCNF" contentType="application/xml" doc:name="HTTP"/>
+    </when>
+
+<when expression="#[sessionVars['serviceName'].replace('.RESPONSE','') == 'SVCW2BCNF']">
+<expression-component>
+    Thread.sleep(5000);
+</expression-component>
+                                                <logger message="inside sync choice" level="INFO" doc:name="Logger" category="EIGInformation"/>
+                                                        <http:outbound-endpoint exchange-pattern="one-way" method="POST" address="http://192.168.130.2:9393/sfm/serviceRequest/resume/SVCW2BCNF" contentType="application/xml" doc:name="HTTP"/>
+    </when>
+
+
+					<when expression="#[sessionVars['serviceName'].replace('.RESPONSE','') == 'OBANKDASS']">
+<expression-component>
+    Thread.sleep(5000);
+</expression-component>
+					<logger message="inside sync choice" level="INFO" doc:name="Logger" category="EIGInformation"/>
+    					<http:outbound-endpoint exchange-pattern="one-way" method="POST" address="http://192.168.130.2:9393/sfm/serviceRequest/resume/OBANKDASS" contentType="application/json" doc:name="HTTP"/>
+    </when>
+					<when expression="#[sessionVars['serviceName'].replace('.RESPONSE','') == 'CWAREQ']">
+<expression-component>
+    Thread.sleep(5000);
+</expression-component>
+						<logger message="inside sync choice" level="INFO" doc:name="Logger" category="EIGInformation"/>
+						<http:outbound-endpoint exchange-pattern="one-way" method="POST" address="http://192.168.130.2:9393/sfm/serviceRequest/resume/CWAREQ" contentType="application/json" doc:name="HTTP"/>
+						</when> 
+ 	</choice>
+                        </when>
+                        <otherwise>
+                                <choice doc:name="Product Service Based splitter">
+                                        <when expression="#[sessionVars['serviceName'].replace('.RESPONSE','') == 'MERCHPAY']">
+                                                <http:outbound-endpoint exchange-pattern="one-way" method="POST" address="http://192.168.130.2:9393/sfm/serviceRequest/RESUME_MERCHPAY" contentType="application/json" doc:name="HTTP"/>
+                                        </when>
+                                        <when expression="#[sessionVars['serviceName'].replace('.RESPONSE','') == 'MERCHPAYOT']">
+                                                <http:outbound-endpoint exchange-pattern="one-way" method="POST" address="http://192.168.130.2:9393/sfm/serviceRequest/RESUME_MERCHPAYOT" contentType="application/json" doc:name="HTTP"/>
+                                </when>
+                                <when expression="#[sessionVars['serviceName'].replace('.RESPONSE','') == 'MERCREFUND']">
+                                                    <http:outbound-endpoint exchange-pattern="one-way" method="POST" address="http://192.168.130.2:9393/sfm/serviceRequest/RESUME_MERCREFUND" contentType="application/json" doc:name="HTTP"/>
+                                </when>
+                                <when expression="#[sessionVars['serviceName'].replace('.RESPONSE','') == 'INTLSEND']">
+                                                    <http:outbound-endpoint exchange-pattern="one-way" method="POST" address="http://192.168.130.2:9393/sfm/serviceRequest/RESUME_INTLSEND" contentType="application/json" doc:name="HTTP"/>
+                                </when>
+                                <when expression="#[sessionVars['serviceName'].replace('.RESPONSE','') == 'ANTINITIMT']">
+                                                    <http:outbound-endpoint exchange-pattern="one-way" method="POST" address="http://192.168.130.2:9393/sfm/serviceRequest/RESUME_ANTINITIMT" contentType="application/json" doc:name="HTTP"/>
+                                </when>
+                                <when expression="#[sessionVars['serviceName'].replace('.RESPONSE','') == 'RC']">
+                                                    <http:outbound-endpoint exchange-pattern="one-way" method="POST" address="http://192.168.130.2:9393/sfm/serviceRequest/RESUME_RC" contentType="application/json" doc:name="HTTP"/>
+                                </when>
+                                <when expression="#[sessionVars['serviceName'].replace('.RESPONSE','') == 'CTMMOREQ']">
+                                                    <http:outbound-endpoint exchange-pattern="one-way" method="POST" address="http://192.168.130.2:9393/sfm/serviceRequest/RESUME_CTMMOREQ" contentType="application/json" doc:name="HTTP"/>
+                                </when>
+                                <when expression="#[sessionVars['serviceName'].replace('.RESPONSE','') == 'CBWREQ']">
+                                                    <http:outbound-endpoint exchange-pattern="one-way" method="POST" address="http://192.168.130.2:9393/sfm/serviceRequest/RESUME_CBWREQ" contentType="application/json" doc:name="HTTP"/>
+                                </when>
+				<when expression="#[sessionVars['serviceName'].replace('.RESPONSE','') == 'TXNCORRECT']">
+                                                    <http:outbound-endpoint exchange-pattern="one-way" method="POST" address="http://192.168.130.2:9393/sfm/serviceRequest/RESUME_TXNCORRECT" contentType="application/json" doc:name="HTTP"/>
+							</when>
+                                <when expression="#[sessionVars['serviceName'].replace('.RESPONSE','') == 'TRCASHIN']">
+                                                    <http:outbound-endpoint exchange-pattern="one-way" method="POST" address="http://192.168.130.2:9393/sfm/serviceRequest/RESUME_TRCASHIN" contentType="application/json" doc:name="HTTP"/>
+                                </when>
+                                <when expression="#[sessionVars['serviceName'].replace('.RESPONSE','') == 'CWBREQ']">
+                                                    <http:outbound-endpoint exchange-pattern="one-way" method="POST" address="http://192.168.130.2:9393/sfm/serviceRequest/RESUME_CWBREQ" contentType="application/json" doc:name="HTTP"/>
+                                </when>
+                                <when expression="#[sessionVars['serviceName'].replace('.RESPONSE','') == 'COMDISB']">
+                                                    <http:outbound-endpoint exchange-pattern="one-way" method="POST" address="http://192.168.130.2:9393/sfm/serviceRequest/RESUME_COMDISB" contentType="application/json" doc:name="HTTP"/>
+                                </when>
+                                <when expression="#[sessionVars['serviceName'].replace('.RESPONSE','') == 'BILLPAY']">
+                                                    <http:outbound-endpoint exchange-pattern="one-way" method="POST" address="http://192.168.130.2:9393/sfm/serviceRequest/RESUME_BILLPAYONLINE" contentType="application/json" doc:name="HTTP"/>
+                                </when>
+<when expression="#[sessionVars['serviceName'].replace('.RESPONSE','') == 'RBILPAYONE']">
+                                                    <http:outbound-endpoint exchange-pattern="one-way" method="POST" address="http://192.168.130.2:9393/sfm/serviceRequest/RESUME_RBILPAYONEONLINE" contentType="application/json" doc:name="HTTP"/>
+                                </when>
+<when expression="#[sessionVars['serviceName'].replace('.RESPONSE','') == 'SBILLPAY']">
+                                                    <http:outbound-endpoint exchange-pattern="one-way" method="POST" address="http://192.168.130.2:9393/sfm/serviceRequest/RESUME_SBILLPAYONLINE" contentType="application/json" doc:name="HTTP"/>
+                                </when>
+<when expression="#[sessionVars['serviceName'].replace('.RESPONSE','') == 'SRBILPAY']">
+                                                    <http:outbound-endpoint exchange-pattern="one-way" method="POST" address="http://192.168.130.2:9393/sfm/serviceRequest/RESUME_SRBILPAYONLINE" contentType="application/json" doc:name="HTTP"/>
+                                </when>
+<when expression="#[sessionVars['serviceName'].replace('.RESPONSE','') == 'DEBITSC']">
+                                                    <http:outbound-endpoint exchange-pattern="one-way" method="POST" address="http://192.168.130.2:9393/sfm/serviceRequest/RESUME_DEBITSC" contentType="application/json" doc:name="HTTP"/>
+                                </when>
+                                <when expression="#[sessionVars['serviceName'].replace('.RESPONSE','') == 'STOCKOUT']">
+                                                    <http:outbound-endpoint exchange-pattern="one-way" method="POST" address="http://192.168.130.2:9393/sfm/serviceRequest/RESUME_STOCKWITHDRAWL" contentType="application/json" doc:name="HTTP"/>
+                                </when>
+				<when expression="#[sessionVars['serviceName'].replace('.RESPONSE','') == 'COLLECT']">
+                                                    <http:outbound-endpoint exchange-pattern="one-way" method="POST" address="http://192.168.130.2:9393/sfm/serviceRequest/RESUME_COLLECT" contentType="application/json" doc:name="HTTP"/>
+                                </when>
+<when expression="#[sessionVars['serviceName'].replace('.RESPONSE','') == 'STKLIQREQ']">
+                                                    <http:outbound-endpoint exchange-pattern="one-way" method="POST" address="http://192.168.130.2:9393/sfm/serviceRequest/RESUME_STKLIQREQ" contentType="application/json" doc:name="HTTP"/>
+                                </when>
+<when expression="#[sessionVars['serviceName'].replace('.RESPONSE','') == 'GENNONFIN']">
+                                                    <http:outbound-endpoint exchange-pattern="one-way" method="POST" address="http://192.168.130.2:9393/sfm/serviceRequest/GENNONOLY" contentType="application/json" doc:name="HTTP"/>
+                                </when>
+<when expression="#[sessionVars['serviceName'].replace('.RESPONSE','') == 'OPTW']">
+                                                    <http:outbound-endpoint exchange-pattern="one-way" method="POST" address="http://192.168.130.2:9999/jigsaw/sync/serviceRequest/resume/SYNCOPTW" contentType="application/json" doc:name="HTTP"/>
+													</when>
+
+				<when expression="#[sessionVars['serviceName'].replace('.RESPONSE','') == 'ENQUIRY']">
+					<logger message="inside sync choice" level="INFO" doc:name="Logger" category="EIGInformation"/>
+					<http:outbound-endpoint exchange-pattern="one-way" method="POST" address="http://192.168.130.2:9393/sfm/serviceRequest/resume/ENQUIRY" contentType="application/json" doc:name="HTTP"/>
+                                </when>
+                                </choice>
+                                </otherwise>
+                </choice>
+    </sub-flow>
+
+        <flow name="Async_Scope_ExampleFlow1" >
+                <http:inbound-endpoint exchange-pattern="request-response"
+                        host="192.168.129.2" port="10015" doc:name="HTTP" />
+                <echo-component doc:name="Echo" />
+                <custom-transformer
+                        class="com.comviva.mfs.eig.transformers.mapper.XmlMapper" doc:name="Initializer">
+                        <spring:property name="sessionBean" ref="sessionBean" />
+                        <spring:property name="RulesFileName" value="EIG_RULES.xml" />
+                </custom-transformer>
+
+                <async doc:name="Async" processingStrategy="Allow42Threads">
+
+
+		<custom-transformer
+                                class="com.comviva.mfs.eig.transformers.generic.JsonPathToMap"
+                                doc:name="JsonPathToMap">
+                                <spring:property name="sessionBean" ref="sessionBean" />
+                                <spring:property name="interfaceIdentificationTag"
+                                        value="interfaceId" />
+                                <spring:property name="serviceIdentifierTag" value="serviceFlowId" />
+                        </custom-transformer>
+
+            <expression-transformer expression="#[sessionVars['isSyncRequest'] =message.payload.isSyncRequest;sessionVars['timeOutCase'] =message.payload.timeOutCase; sessionVars['interfaceId'] = message.payload.interfaceId; sessionVars['serviceRequestId'] =message.payload.serviceRequestId; sessionVars['serviceFlowId'] = sessionVars['serviceName'];sessionVars['transactionId'] = message.payload.transactionId; sessionVars['referenceId'] = message.payload.referenceId; sessionVars['pickup_reference_number'] = message.payload.pickup_reference_number; sessionVars['transaction_digest'] =  message.payload.transaction_digest; sessionVars['status'] = message.payload.status; sessionVars['wuReplyType'] = message.payload.wuReplyType; return message.payload;]" doc:name="SaveRequestParamsForResponse" returnSourceIfNull="true"/>
+
+       <custom-transformer
+                                class="com.comviva.mfs.eig.transformers.generic.SetSessionObjects"
+                                doc:name="SetSessionObjects">
+                                <spring:property name="type" value="request" />
+                                <spring:property name="sessionBean" ref="SessionBean" />
+                                <spring:property name="serviceIdentifierTag" value="serviceFlowId" />
+                                <spring:property name="interfaceIdentifierTag"
+                                        value="interfaceId" />
+                        </custom-transformer>
+                        <custom-transformer class="com.comviva.mfs.eig.logging.LogHider"
+                                doc:name="Log Hider">
+                                <spring:property name="sessionBean" ref="SessionBean" />
+                        </custom-transformer>
+                        <custom-transformer
+                                class="com.comviva.mfs.eig.transformers.generic.MapToTemplate"
+                                doc:name="MapToTemplate">
+                                <spring:property name="sessionBean" ref="SessionBean" />
+                        </custom-transformer>
+                        <custom-transformer class="com.comviva.mfs.eig.logging.LogTime"
+                                doc:name="Logging">
+                                <spring:property name="state" value="SEND_TIME" />
+                                <spring:property name="type" value="RequestToThirdParty" />
+                        </custom-transformer>
+                              <logger message="outside of choice choice  #[sessionVars['timeOutCase']]" level="INFO" doc:name="Logger" category="EIGInformation" />
+<logger message="inside PushNotification condition #[sessionVars['interfaceId']]" level="DEBUG" doc:name="Logger" category="EIGInformation"/>
+<logger message="inside PushNotification condition #[sessionVars]" level="DEBUG" doc:name="Logger" category="EIGInformation"/>
+                                        <choice doc:name="Choice">
+                                                <when expression="#[sessionVars['timeOutCase']=='timeOut']" >
+                                                   <logger message="inside time out condition #[sessionVars['timeOutCase']]" level="INFO" doc:name="Logger" category="EIGInformation"/>
+                                                                <http:outbound-endpoint exchange-pattern="request-response" method="POST" doc:name="HTTP (Deprecated)"
+                                                        address="http://192.168.130.2:7070/sv/stub/eig/thirdParty/timeOut" contentType="application/json" responseTimeout="5000" />
+                                                </when>
+<when expression="#[sessionVars['interfaceId']=='0000001664']" >
+	<logger message="inside western union condition #[sessionVars['interfaceId']]" level="INFO" doc:name="Logger" category="EIGInformation"/>
+	<http:outbound-endpoint exchange-pattern="request-response" method="POST" doc:name="HTTP (Deprecated)"
+	address="http://52.89.211.248/sv/stub/eig/call/wu" contentType="application/xml" responseTimeout="15000" />
+</when>
+                                                <when expression="#[sessionVars['interfaceId']=='PUSHNOTIFICATION']" >
+                                                   <logger message="inside PushNotification condition #[sessionVars['interfaceId']]" level="DEBUG" doc:name="Logger" category="EIGInformation"/>
+                                                                <http:outbound-endpoint exchange-pattern="request-response" method="POST" doc:name="HTTP (Deprecated)"
+                                                        address="http://192.168.130.2:7070/MFS_stub/eig/thirdParty/push" contentType="application/xml" responseTimeout="5000" />
+                                                </when>
+						<when expression="#[sessionVars['interfaceId']=='MULTICOUNTRY']" >
+                                                   <logger message="inside MULTICOUNTRY condition #[sessionVars['interfaceId']]" level="DEBUG" doc:name="Logger" category="EIGInformation"/>
+                                                                <http:outbound-endpoint exchange-pattern="request-response" method="POST" doc:name="HTTP (Deprecated)"
+                                                        address="http://#[sessionVars['thirdPartyRequestUrl']]" contentType="application/xml" responseTimeout="5000" />
+                                                </when>
+                                                <otherwise>
+                                                        <http:outbound-endpoint exchange-pattern="request-response" method="POST" doc:name="HTTP (Deprecated)"
+                                                        address="http://192.168.130.2:7070/sv/stub/eig/thirdParty/success" contentType="application/json" responseTimeout="20000" />
+                                                </otherwise>
+                                        </choice>
+
+
+                                <!-- <custom-transformer class="com.comviva.mfs.eig.jsonsimulator.JsonSimulator"
+                                doc:name="Simulator"/> -->
+                        <choice doc:name="Choice">
+                        <when expression="#[sessionVars['interfaceId']!='PUSHNOTIFICATION']" >
+
+                        <echo-component doc:name="Echo" />
+                        <custom-transformer class="com.comviva.mfs.eig.logging.LogTime"
+                                doc:name="Logging">
+                                <spring:property name="state" value="RECIEVE_TIME" />
+                                <spring:property name="type" value="ResponseFromThirdParty" />
+                        </custom-transformer>
+                        <custom-transformer
+                                class="com.comviva.mfs.eig.transformers.generic.SetSessionObjects"
+                                doc:name="SetSessionObjects">
+                                <spring:property name="sessionBean" ref="SessionBean" />
+                                <spring:property name="type" value="response" />
+                        </custom-transformer>
+                        <custom-transformer
+                                class="com.comviva.mfs.eig.transformers.generic.JsonPathToMap"
+                                doc:name="JsonPathToMap">
+                                <spring:property name="sessionBean" ref="SessionBean" />
+                        </custom-transformer>
+            <expression-transformer expression="#[message.payload.resumeServiceRequestId = sessionVars['serviceRequestId']; message.payload.transactionId = sessionVars['transactionId']; message.payload.referenceId = sessionVars['referenceId']; 
+message.payload.pickup_reference_number = sessionVars['pickup_reference_number']; message.payload.transaction_digest = sessionVars['transaction_digest'] ; message.payload.status = sessionVars['status']; message.payload.wuReplyType = sessionVars['wuReplyType']; return message.payload;]" doc:name="SetResponseParametersFromSession"/>
+
+ <logger message="Third party payload sent to jigsaw #[message.payload]" level="INFO" doc:name="Logger" category="EIGInformation" />
+
+                        <custom-transformer class="com.comviva.mfs.eig.logging.LogHider"
+                                doc:name="Log Hider">
+                                <spring:property name="sessionBean" ref="SessionBean" />
+                        </custom-transformer>
+                        <custom-transformer
+                                class="com.comviva.mfs.eig.transformers.generic.MapToTemplate"
+                                doc:name="MapToTemplate">
+                                <spring:property name="sessionBean" ref="SessionBean" />
+                        </custom-transformer>
+                        <custom-transformer class="com.comviva.mfs.eig.logging.TDRLogsGenerator"
+                                doc:name="TDR Logs" />
+                                                <flow-ref name="asyncwithcallbackSub_Flow" />
+                        <!-- <http:outbound-endpoint exchange-pattern="one-way"
+                                method="POST" address="http://calbackUrl.com" doc:name="HTTP" /> -->
+
+
+                        </when>
+
+                </choice>
+
+                </async>
+                <set-payload value="Message Received" doc:name="Set Payload" />
+                <http:response-builder doc:name="HTTP Response Builder" />
+                <catch-exception-strategy doc:name="Catch Exception Strategy">
+
+ <logger message="outside of choice choice  #[message]" level="INFO" doc:name="Logger" category="EIGInformation" />
+
+
+
+<custom-transformer class="com.comviva.mfs.eig.exceptionhandlers.GenericExceptionHander" doc:name="Exception Handler"/>
+
+<expression-transformer expression="#[message.payload.resumeServiceRequestId = sessionVars['serviceRequestId']; message.payload.transactionId = sessionVars['transactionId']; message.payload.referenceId = sessionVars['referenceId']; return message.payload;]" doc:name="SetResponseParametersFromSessionEx"/>
+
+            <custom-transformer returnClass="java.lang.String" class="com.comviva.mfs.eig.transformers.generic.MapToTemplate" doc:name="Map to Template">
+                <spring:property name="sessionBean" ref="SessionBean"/>
+                <spring:property name="fixedTemplatePath" value="templates/Json_Error_Response.xml"/>
+            </custom-transformer>
+<!--             <custom-transformer class="com.comviva.mfs.eig.logging.JsonLogger" doc:name="JSON Logger"/> -->
+            <custom-transformer class="com.comviva.mfs.eig.logging.TDRLogsGenerator" doc:name="TDR Logs"/>
+            <custom-transformer class="com.comviva.mfs.eig.exceptionhandlers.AmbigousLogGenerator" doc:name="AmbiguosLogs"/>
+            <echo-component doc:name="Echo"/>
+			<choice doc:name="Product Service Based splitter">
+					<when expression="#[sessionVars['isSyncRequest'] == 'true']">
+							<choice doc:name="Product Service Based splitter">
+									<when expression="#[sessionVars['serviceName'].replace('.RESPONSE','') == 'CTMMOREQ']">
+											<logger message="inside sync Exception choice" level="INFO" doc:name="Logger" category="EIGInformation"/>
+											<http:outbound-endpoint exchange-pattern="one-way" method="POST" address="http://192.168.130.2:9393/sfm/serviceRequest/resume/CTMMOREQSYNC" contentType="application/json" doc:name="HTTP"/>
+									</when>
+									<when expression="#[sessionVars['serviceName'].replace('.RESPONSE','') == 'BILLPAY']">
+											<logger message="inside Exception sync choice" level="INFO" doc:name="Logger" category="EIGInformation"/>
+											<http:outbound-endpoint exchange-pattern="one-way" method="POST" address="http://192.168.130.2:9393/sfm/serviceRequest/resume/BILLPAYSYNC" contentType="application/json" doc:name="HTTP"/>
+									</when>
+									<when expression="#[sessionVars['serviceName'].replace('.RESPONSE','') == 'SBILLPAY']">
+   									<logger message="inside Exception sync choice" level="INFO" doc:name="Logger" category="EIGInformation"/>
+   						<http:outbound-endpoint exchange-pattern="one-way" method="POST" address="http://192.168.130.2:9393/sfm/serviceRequest/resume/SBILLPAYSYNC" contentType="application/json" doc:name="HTTP"/>
+  							 </when>					
+						<when expression="#[sessionVars['serviceName'].replace('.RESPONSE','') == 'TXNCORRECT']">
+                                                <logger message="inside sync choice" level="INFO" doc:name="Logger" category="EIGInformation"/>
+                                                <http:outbound-endpoint exchange-pattern="one-way" method="POST" address="http://192.168.130.2:9393/sfm/serviceRequest/resume/TXNCORRECTSYNC" contentType="application/json" doc:name="HTTP"/>
+						</when>
+						<when expression="#[sessionVars['serviceName'].replace('.RESPONSE','') == 'RBILPAYONE']">
+                				  <logger message="inside sync choice" level="INFO" doc:name="Logger" category="EIGInformation"/>
+                 				 <http:outbound-endpoint exchange-pattern="one-way" method="POST" address="http://192.168.130.2:9393/sfm/serviceRequest/resume/RBILPAYONESYNC" contentType="application/json" doc:name="HTTP"/>
+                 				 </when>																								
+						<when expression="#[sessionVars['serviceName'].replace('.RESPONSE','') == 'SRBILPAY']">
+                				 <logger message="inside sync choice" level="INFO" doc:name="Logger" category="EIGInformation"/>
+                				 <http:outbound-endpoint exchange-pattern="one-way" method="POST" address="http://192.168.130.2:9393/sfm/serviceRequest/resume/SRBILPAYSYNC" contentType="application/json" doc:name="HTTP"/>
+                 			 </when>
+<when expression="#[sessionVars['serviceName'].replace('.RESPONSE','') == 'STKLIQREQ']">
+                                                 <logger message="inside sync choice" level="INFO" doc:name="Logger" category="EIGInformation"/>
+                                                 <http:outbound-endpoint exchange-pattern="one-way" method="POST" address="http://192.168.130.2:9393/sfm/serviceRequest/resume/STKLIQREQSYNC" contentType="application/json" doc:name="HTTP"/>
+                                         </when>
+
+	<when expression="#[sessionVars['serviceName'].replace('.RESPONSE','') == 'MERCREFUND']">
+                                               				 <logger message="inside sync choice" level="INFO" doc:name="Logger" category="EIGInformation"/>
+                                               				 <http:outbound-endpoint exchange-pattern="one-way" method="POST" address="http://192.168.130.2:9393/sfm/serviceRequest/resume/MERCREFUNDSYNC" contentType="application/json" doc:name="HTTP"/>
+                                        				</when>
+									<when expression="#[sessionVars['serviceName'].replace('.RESPONSE','') == 'CBWREQ']">
+   									<logger message="inside Exception sync choice" level="INFO" doc:name="Logger" category="EIGInformation"/>
+  									 <http:outbound-endpoint exchange-pattern="one-way" method="POST" address="http://192.168.130.2:9393/sfm/serviceRequest/resume/CBWREQSYNC" contentType="application/json" doc:name="HTTP"/>
+									   </when>
+
+ 									<when expression="#[sessionVars['serviceName'].replace('.RESPONSE','') == 'CWBREQ']">
+   									<logger message="inside Exception sync choice" level="INFO" doc:name="Logger" category="EIGInformation"/>
+   									<http:outbound-endpoint exchange-pattern="one-way" method="POST" address="http://192.168.130.2:9393/sfm/serviceRequest/resume/CWBREQSYNC" contentType="application/json" doc:name="HTTP"/>
+								   </when>									
+<when expression="#[sessionVars['serviceName'].replace('.RESPONSE','') == 'STOCKOUT']">
+											<logger message="inside Exception sync choice" level="INFO" doc:name="Logger" category="EIGInformation"/>
+											<http:outbound-endpoint exchange-pattern="one-way" method="POST" address="http://192.168.130.2:9393/sfm/serviceRequest/resume/STOCKWITHDRAWLSYNC" contentType="application/json" doc:name="HTTP"/>
+									</when>
+									<when expression="#[sessionVars['serviceName'].replace('.RESPONSE','') == 'MERCHPAY']">
+											<logger message="inside Exception sync choice" level="INFO" doc:name="Logger" category="EIGInformation"/>
+											<http:outbound-endpoint exchange-pattern="one-way" method="POST" address="http://192.168.130.2:9393/sfm/serviceRequest/resume/MERCHPAYSYNC" contentType="application/json" doc:name="HTTP"/>
+									</when>
+									<when expression="#[sessionVars['serviceName'].replace('.RESPONSE','') == 'RC']">
+											<logger message="inside Exception sync choice" level="INFO" doc:name="Logger" category="EIGInformation"/>
+											<http:outbound-endpoint exchange-pattern="one-way" method="POST" address="http://192.168.130.2:9393/sfm/serviceRequest/resume/RCSYNC" contentType="application/json" doc:name="HTTP"/>
+									</when>
+<when expression="#[sessionVars['serviceName'].replace('.RESPONSE','') == 'OPTW']">
+                                                    <http:outbound-endpoint exchange-pattern="one-way" method="POST" address="http://52.89.211.248/jigsaw/sync/serviceRequest/resume/SYNCOPTW" contentType="application/json" doc:name="HTTP"/>
+													</when>
+                                        <when expression="#[sessionVars['serviceName'].replace('.RESPONSE','') == 'IOABTREQ']">
+                                        <http:outbound-endpoint exchange-pattern="one-way" method="POST" address="http://192.168.130.2:9393/sfm/serviceRequest/resume/IOABTREQ" contentType="application/json" doc:name="HTTP"/>
+                                                        </when>
+                                        <when expression="#[sessionVars['serviceName'].replace('.RESPONSE','') == 'IABTREQ']">
+                                                <http:outbound-endpoint exchange-pattern="one-way" method="POST" address="http://192.168.130.2:9393/sfm/serviceRequest/resume/IABTREQ" contentType="application/json" doc:name="HTTP"/>
+                                                        </when>
+                                        <when expression="#[sessionVars['serviceName'].replace('.RESPONSE','') == 'OBANKASS']">
+                                                        <http:outbound-endpoint exchange-pattern="one-way" method="POST" address="http://192.168.130.2:9393/sfm/serviceRequest/resume/OBANKASS" contentType="application/json" doc:name="HTTP"/>
+														</when>
+                                        <when expression="#[sessionVars['serviceName'].replace('.RESPONSE','') == 'OBANKDASS']">
+                                        <http:outbound-endpoint exchange-pattern="one-way" method="POST" address="http://192.168.130.2:9393/sfm/serviceRequest/resume/OBANKDASS" contentType="application/json" doc:name="HTTP"/>
+														</when>
+                                        <when expression="#[sessionVars['serviceName'].replace('.RESPONSE','') == 'CWAREQ']">
+                                                <http:outbound-endpoint exchange-pattern="one-way" method="POST" address="http://192.168.130.2:9393/sfm/serviceRequest/resume/CWAREQ" contentType="application/json" doc:name="HTTP"/>
+                                                </when>
+							</choice>
+					</when>
+					<otherwise>
+							<logger message="inside sync Exception otherwise" level="INFO" doc:name="Logger" category="EIGInformation"/>
+					</otherwise>
+			</choice>
+        </catch-exception-strategy>
+        </flow>
+</mule>
