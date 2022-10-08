@@ -1,0 +1,229 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mule
+        xmlns:https="http://www.mulesoft.org/schema/mule/https"
+        xmlns:tracking="http://www.mulesoft.org/schema/mule/ee/tracking"
+        xmlns:json="http://www.mulesoft.org/schema/mule/json"
+        xmlns:http="http://www.mulesoft.org/schema/mule/http"
+        xmlns="http://www.mulesoft.org/schema/mule/core"
+        xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+        xmlns:spring="http://www.springframework.org/schema/beans" version="EE-3.3.3"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xmlns:mulexml="http://www.mulesoft.org/schema/mule/xml"
+        xmlns:cxf="http://www.mulesoft.org/schema/mule/cxf"
+        xmlns:core="http://www.mulesoft.org/schema/mule/core"  xmlns:context="http://www.springframework.org/schema/context"
+                xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-current.xsd
+http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/xml http://www.mulesoft.org/schema/mule/xml/current/mule-xml.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/cxf http://www.mulesoft.org/schema/mule/cxf/current/mule-cxf.xsd
+http://www.mulesoft.org/schema/mule/json http://www.mulesoft.org/schema/mule/json/current/mule-json.xsd
+http://www.mulesoft.org/schema/mule/ee/tracking http://www.mulesoft.org/schema/mule/ee/tracking/current/mule-tracking-ee.xsd
+http://www.mulesoft.org/schema/mule/https http://www.mulesoft.org/schema/mule/https/current/mule-https.xsd
+http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-current.xsd">
+
+        <flow name="messageTransfersReversalFlow" doc:name="messageTransfersReversalFlow">
+                <http:listener config-ref="TIPS_TRANSFER_LISTENER" path="/messageTransfersReversal" doc:name="HTTP" allowedMethods="POST"/>
+                <echo-component doc:name="Echo" />
+                <custom-transformer class="com.comviva.mfs.eig.transformers.mapper.XmlMapper" doc:name="Initializer">
+                        <spring:property name="sessionBean" ref="sessionBean" />
+                        <spring:property name="RulesFileName" value="EIG_RULES.xml" />
+                </custom-transformer>
+                <json:json-to-object-transformer returnClass="java.util.Map" doc:name="JSON to Object"/>
+                <expression-transformer expression="#[message.payload.fspSource =message.inboundProperties.'Fsp-source'; message.payload.fspDestination = message.inboundProperties.'Fsp-destination'; return message.payload;]" doc:name="setFspSource" />
+                <custom-transformer returnClass="java.lang.String" class="com.comviva.mfs.eig.transformers.generic.MapToTemplate" doc:name="Map to Template">
+                        <spring:property name="sessionBean" ref="SessionBean" />
+                        <spring:property name="fixedTemplatePath" value="templates/mobiquityMessageTransfersReversalRequest.xml" />
+                </custom-transformer>
+                <custom-transformer class="com.comviva.mfs.eig.logging.LogTime"	doc:name="Logging">
+			<spring:property name="state" value="SEND_TIME" />
+			<spring:property name="type" value="RequestToThirdParty" />
+		</custom-transformer>
+                <message-properties-transformer scope="outbound">
+                        <add-message-property key="accept" value="application/json"/>
+                        <add-message-property key="content-type" value="application/json"/>
+                        <delete-message-property key="MULE_SESSION"/>
+                        <delete-message-property key="X-MULE_SESSION"/>
+                </message-properties-transformer>
+                <http:outbound-endpoint exchange-pattern="request-response" method="POST" address="http://${extensibility.api.host}:${extensibility.api.port}${extensibility.api.messageTransfersReversalFlow}" doc:name="HTTP" responseTimeout="30000" contentType="application/json" />
+                <echo-component doc:name="Echo" />
+                
+                <set-session-variable variableName="responseHttpStatus" value="#[message.inboundProperties.'http.status']"/>
+	    	<choice doc:name="Eig Status Based splitter">
+			<when expression="#[sessionVars['responseHttpStatus'] == '200' || sessionVars['responseHttpStatus'] == '201' || sessionVars['responseHttpStatus'] == '202']">
+				<custom-transformer class="com.comviva.mfs.eig.logging.LogTime" doc:name="Logging">
+			                <spring:property name="state" value="RECIEVE_TIME" />
+			                <spring:property name="type" value="ResponseFromThirdParty" />
+		                </custom-transformer>
+                                <set-payload value="{&quot;message&quot;:&quot;Accepted&quot;}"/>
+                                <message-properties-transformer scope="outbound">
+                                        <delete-message-property key="MULE_SESSION"/>
+                                        <delete-message-property key="X-MULE_SESSION"/>
+                                        <add-message-property key="http.status" value="202"/>
+                                </message-properties-transformer>  
+			</when>
+			<otherwise>
+				<flow-ref name="reversalGeneralExceptionHandler" doc:name="reversalGeneralExceptionHandler"/>
+                                <set-property propertyName="http.status" value="400" doc:name="Property"/>
+			</otherwise>
+		</choice>
+		
+                <catch-exception-strategy doc:name="Catch Exception Strategy">
+			<flow-ref name="reversalGeneralExceptionHandler" doc:name="reversalGeneralExceptionHandler"/>
+                         <set-property propertyName="http.status" value="400" doc:name="Property"/>
+                </catch-exception-strategy>
+        </flow>
+
+        <flow name="reversalCompletionFlow" doc:name="reversalCompletionFlow">
+                <http:listener config-ref="TIPS_TRANSFER_LISTENER" path="/transfersReversal/{payerRef}" doc:name="HTTP" allowedMethods="PUT"/>
+                <echo-component doc:name="Echo" />
+                <custom-transformer class="com.comviva.mfs.eig.transformers.mapper.XmlMapper" doc:name="Initializer">
+                        <spring:property name="sessionBean" ref="sessionBean" />
+                        <spring:property name="RulesFileName" value="EIG_RULES.xml" />
+                </custom-transformer>
+                <json:json-to-object-transformer returnClass="java.util.Map" doc:name="JSON to Object"/>
+                <set-session-variable variableName="payerRef" value="#[message.inboundProperties.'http.uri.params'.payerRef]"/>
+                <set-session-variable variableName="refFspId" value="#[org.apache.commons.lang3.StringUtils.substring(message.payload.payerReversalRef,0,3)]" doc:name="Variable"/>
+                <expression-transformer expression="#[sessionVars.fspSource =message.inboundProperties.'Fsp-source'; sessionVars.fspDestination = message.inboundProperties.'Fsp-destination'; sessionVars.Date =message.inboundProperties.'Date'; return message.payload;]" doc:name="setFspSource" />
+                <expression-transformer expression="#[message.payload.fspSource =message.inboundProperties.'Fsp-source'; message.payload.fspDestination = message.inboundProperties.'Fsp-destination'; message.payload.Date =message.inboundProperties.'Date'; return message.payload;]" doc:name="setFspSource" />
+                
+                <choice doc:name="Eig Status Based splitter">
+			<when expression="#[sessionVars.refFspId == ${fsp.id}]">
+				<flow-ref name="outwardReversalCompletion" doc:name="outwardReversalCompletion"/>	
+			</when>
+			<otherwise>
+				<flow-ref name="inwardReversalCompletion" doc:name="inwardReversalCompletion"/>
+			</otherwise>
+		</choice>
+                
+                <echo-component doc:name="Echo" />
+
+                <set-session-variable variableName="responseHttpStatus" value="#[message.inboundProperties.'http.status']"/>
+	    	<choice doc:name="Eig Status Based splitter">
+			<when expression="#[sessionVars['responseHttpStatus'] == '200' || sessionVars['responseHttpStatus'] == '201' || sessionVars['responseHttpStatus'] == '202']">
+				<custom-transformer class="com.comviva.mfs.eig.logging.LogTime" doc:name="Logging">
+			                <spring:property name="state" value="RECIEVE_TIME" />
+			                <spring:property name="type" value="ResponseFromThirdParty" />
+		                </custom-transformer>
+                                <set-payload value="{&quot;message&quot;:&quot;Accepted&quot;}"/>
+                                <message-properties-transformer scope="outbound">
+                                        <delete-message-property key="MULE_SESSION"/>
+                                        <delete-message-property key="X-MULE_SESSION"/>
+                                        <add-message-property key="http.status" value="200"/>
+                                </message-properties-transformer>
+			</when>
+			<otherwise>
+				<flow-ref name="reversalGeneralExceptionHandler" doc:name="reversalGeneralExceptionHandler"/>
+                                <set-property propertyName="http.status" value="400" doc:name="Property"/>
+			</otherwise>
+		</choice>
+                
+                <catch-exception-strategy doc:name="Catch Exception Strategy">
+			<flow-ref name="reversalGeneralExceptionHandler" doc:name="reversalGeneralExceptionHandler"/>
+                        <set-property propertyName="http.status" value="400" doc:name="Property"/>
+                </catch-exception-strategy>
+        </flow>
+
+        <flow name="reversalInitiationFromOtherFsp" doc:name="reversalInitiationFromOtherFsp">
+                <http:listener config-ref="TIPS_TRANSFER_LISTENER" path="/messageTransfersReversal/{payerRef}" doc:name="HTTP" allowedMethods="PUT"/>
+                <echo-component doc:name="Echo" />
+                <custom-transformer class="com.comviva.mfs.eig.transformers.mapper.XmlMapper" doc:name="Initializer">
+                        <spring:property name="sessionBean" ref="sessionBean" />
+                        <spring:property name="RulesFileName" value="EIG_RULES.xml" />
+                </custom-transformer>
+                <json:json-to-object-transformer returnClass="java.util.Map" doc:name="JSON to Object"/>
+                <expression-transformer expression="#[message.payload.payerRef=message.inboundProperties.'http.uri.params'.payerRef; return message.payload;]" doc:name="setFspSource" />
+                <custom-transformer returnClass="java.lang.String" class="com.comviva.mfs.eig.transformers.generic.MapToTemplate" doc:name="Map to Template">
+                        <spring:property name="sessionBean" ref="SessionBean" />
+                        <spring:property name="fixedTemplatePath" value="templates/reversalInitiationFromOtherFspRequest.xml" />
+                </custom-transformer>
+                <custom-transformer class="com.comviva.mfs.eig.logging.LogTime"	doc:name="Logging">
+			<spring:property name="state" value="SEND_TIME" />
+			<spring:property name="type" value="RequestToThirdParty" />
+		</custom-transformer>
+                <message-properties-transformer scope="outbound">
+                        <add-message-property key="accept" value="application/json"/>
+                        <delete-message-property key="MULE_SESSION"/>
+                        <delete-message-property key="X-MULE_SESSION"/>
+                </message-properties-transformer>
+                <http:outbound-endpoint exchange-pattern="request-response" method="POST" address="http://${extensibility.api.host}:${extensibility.api.port}${extensibility.api.reversalInitiation}" doc:name="HTTP" responseTimeout="30000" contentType="application/json" />
+                <echo-component doc:name="Echo" />
+                
+                <set-session-variable variableName="responseHttpStatus" value="#[message.inboundProperties.'http.status']"/>
+	    	<choice doc:name="Eig Status Based splitter">
+			<when expression="#[sessionVars['responseHttpStatus'] == '200' || sessionVars['responseHttpStatus'] == '201' || sessionVars['responseHttpStatus'] == '202']">
+				<custom-transformer class="com.comviva.mfs.eig.logging.LogTime" doc:name="Logging">
+			                <spring:property name="state" value="RECIEVE_TIME" />
+			                <spring:property name="type" value="ResponseFromThirdParty" />
+		                </custom-transformer>
+                                <set-payload value="{&quot;message&quot;:&quot;Accepted&quot;}"/>
+                                <message-properties-transformer scope="outbound">
+                                        <delete-message-property key="MULE_SESSION"/>
+                                        <delete-message-property key="X-MULE_SESSION"/>
+                                        <add-message-property key="http.status" value="200"/>
+                                </message-properties-transformer>    
+			</when>
+			<otherwise>
+				<flow-ref name="reversalGeneralExceptionHandler" doc:name="reversalGeneralExceptionHandler"/>
+                                <set-property propertyName="http.status" value="400" doc:name="Property"/>
+			</otherwise>
+		</choice>
+                
+                <catch-exception-strategy doc:name="Catch Exception Strategy">
+			<flow-ref name="reversalGeneralExceptionHandler" doc:name="reversalGeneralExceptionHandler"/>
+                        <set-property propertyName="http.status" value="400" doc:name="Property"/>
+                </catch-exception-strategy>
+        </flow>
+
+        <sub-flow name="reversalGeneralExceptionHandler">
+                <custom-transformer class="com.comviva.mfs.eig.logging.LogTime" doc:name="Logging">
+			<spring:property name="type" value="ResponseFromThirdParty" />
+		</custom-transformer>
+                <set-payload value="{&quot;errorInformation&quot;:{&quot;errorCode&quot;:&quot;3000&quot;,&quot;errorDescription&quot;:&quot;Generic Error&quot;}}"/>
+                <custom-transformer class="com.comviva.mfs.eig.logging.LogTime" doc:name="Logging">
+			<spring:property name="type" value="ResponseFromThirdParty" />
+		</custom-transformer>
+                <message-properties-transformer scope="outbound">
+                        <delete-message-property key="MULE_SESSION"/>
+                        <delete-message-property key="X-MULE_SESSION"/>
+                        <add-message-property key="http.status" value="400"/>
+                </message-properties-transformer>  
+        </sub-flow>
+
+        <sub-flow name="inwardReversalCompletion">
+                <custom-transformer returnClass="java.lang.String" class="com.comviva.mfs.eig.transformers.generic.MapToTemplate" doc:name="Map to Template">
+                        <spring:property name="sessionBean" ref="SessionBean" />
+                        <spring:property name="fixedTemplatePath" value="templates/mobiquityInwardReversalCompletion.xml" />
+                </custom-transformer>
+                <custom-transformer class="com.comviva.mfs.eig.logging.LogTime"	doc:name="Logging">
+			<spring:property name="state" value="SEND_TIME" />
+			<spring:property name="type" value="RequestToThirdParty" />
+		</custom-transformer>
+                <message-properties-transformer scope="outbound">
+                        <add-message-property key="accept" value="application/json"/>
+                        <add-message-property key="content-type" value="application/json"/>
+                        <add-message-property key="Date" value="#[sessionVars.Date]"/>
+                        <add-message-property key="Fsp-source" value="#[sessionVars.fspSource]"/>
+                        <add-message-property key="Fsp-destination" value="#[sessionVars.fspDestination]"/>
+                        <delete-message-property key="MULE_SESSION"/>
+                        <delete-message-property key="X-MULE_SESSION"/>
+                </message-properties-transformer>
+                <http:outbound-endpoint exchange-pattern="request-response" method="PUT" address="http://${extensibility.api.host}:${extensibility.api.port}${extensibility.api.inwardReversalCompletionFlow}#[sessionVars.payerRef]" doc:name="HTTP" responseTimeout="30000" contentType="application/json" />
+        </sub-flow>
+
+        <sub-flow name="outwardReversalCompletion">
+                <custom-transformer returnClass="java.lang.String" class="com.comviva.mfs.eig.transformers.generic.MapToTemplate" doc:name="Map to Template">
+                        <spring:property name="sessionBean" ref="SessionBean" />
+                        <spring:property name="fixedTemplatePath" value="templates/mobiquityOutwardReversalCompletion.xml" />
+                </custom-transformer>
+                <custom-transformer class="com.comviva.mfs.eig.logging.LogTime"	doc:name="Logging">
+			<spring:property name="state" value="SEND_TIME" />
+			<spring:property name="type" value="RequestToThirdParty" />
+		</custom-transformer>
+                <message-properties-transformer scope="outbound">
+                        <add-message-property key="accept" value="application/json"/>
+                        <delete-message-property key="MULE_SESSION"/>
+                        <delete-message-property key="X-MULE_SESSION"/>
+                </message-properties-transformer>
+                <http:outbound-endpoint exchange-pattern="request-response" method="POST" address="http://${extensibility.api.host}:${extensibility.api.port}${extensibility.api.outwardReversalCompletionFlow}" doc:name="HTTP" responseTimeout="30000" contentType="application/json" />
+        </sub-flow>
+</mule>
